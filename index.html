@@ -66,12 +66,12 @@
             width: fit-content; max-width: 98%;
         }
 
-        /* --- تنظيف محتوى ChatGPT (هام جداً) --- */
-        /* إخفاء الأزرار، الأيقونات، والنصوص المخفية التي تأتي في الـ HTML الأصلي */
-        .bubble button, 
+        /* --- تنظيف محتوى ChatGPT (تعديل هام جداً لزر النسخ) --- */
+        /* إخفاء أزرار ChatGPT الأصلية فقط واستثناء زر النسخ الخاص بنا */
+        .bubble button:not(.copy-btn-custom), 
         .bubble svg, 
         .bubble .sr-only,
-        .bubble [class*="copy"] { 
+        .bubble [class*="copy"]:not(.copy-btn-custom) { 
             display: none !important; 
         }
 
@@ -89,15 +89,17 @@
             background: var(--code-bg); direction: ltr; text-align: left;
         }
         .code-header {
-            background: #2d2d2d; color: #a29bfe; padding: 6px 15px; font-size: 12px;
+            background: #2d2d2d; color: #fff; padding: 6px 15px; font-size: 12px;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid #3d3d3d; font-family: monospace;
         }
         .copy-btn-custom {
-            display: block !important; background: #444; color: #fff; border: none;
-            padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;
+            display: inline-block !important; background: #00b894; color: #fff; border: none;
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;
         }
-        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; }
+        .copy-btn-custom:hover { background: #00967a; }
+        
+        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; font-size: 14px; }
 
         /* --- Footer --- */
         .footer-area { padding: 15px; background: var(--card); border-top: 1px solid var(--border); }
@@ -125,18 +127,18 @@
 </header>
 
 <div id="settings-panel" style="display:none; padding:15px; background:var(--card); border-bottom:1px solid var(--border); gap:10px; grid-template-columns: 1fr 1fr;">
-    <input type="password" id="ghToken" placeholder="GitHub Token" style="padding:8px; border-radius:5px; border:1px solid var(--border);">
-    <input type="text" id="ghRepo" placeholder="username/repo" style="padding:8px; border-radius:5px; border:1px solid var(--border);">
+    <input type="password" id="ghToken" placeholder="GitHub Token">
+    <input type="text" id="ghRepo" placeholder="username/repo">
 </div>
 
 <div id="chat-viewport">
     <div class="msg-container bot-align">
-        <div class="bubble">مرحباً! تم تحديث النظام لتنظيف الأكواد وتحسين الجداول. كيف يمكنني مساعدتك؟</div>
+        <div class="bubble">مرحباً! تم إصلاح زر النسخ وحذف تكرار اسم اللغة في الكود. جرب الآن!</div>
     </div>
 </div>
 
 <div class="footer-area">
-    <div id="status-bar">⏳ جاري المعالجة...</div>
+    <div id="status-bar">⏳ جاري معالجة طلبك...</div>
     <div class="input-container">
         <textarea id="promptInput" rows="1" placeholder="اكتب سؤالك هنا..." oninput="autoResize(this)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="startProcess()">
@@ -186,7 +188,7 @@
         
         if (side === 'bot') {
             bubble.innerHTML = content;
-            formatContent(bubble); // استدعاء دالة التنظيف والتنسيق
+            formatContent(bubble); 
         } else {
             bubble.innerText = content;
         }
@@ -196,11 +198,10 @@
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
 
-    // --- دالة التنسيق الذكية ---
+    // --- تحديث دالة التنسيق لحل مشكلة السطر الأول وزر النسخ ---
     function formatContent(container) {
-        // 1. معالجة الأكواد (Pre)
         container.querySelectorAll('pre').forEach(pre => {
-            // محاولة معرفة اللغة من الكلاسات الأصلية
+            // 1. استخراج اللغة وتحديد اسم الكود
             let lang = "Code";
             const codeTag = pre.querySelector('code');
             if(codeTag) {
@@ -208,6 +209,16 @@
                 if(langClass) lang = langClass.replace('language-', '').toUpperCase();
             }
 
+            // 2. معالجة محتوى النص (حذف السطر الأول إذا كان اسم اللغة)
+            let rawLines = pre.innerText.split('\n');
+            // إذا كان السطر الأول يحتوي فقط على اسم اللغة (تجاهل حالة الأحرف)
+            if (rawLines.length > 0 && rawLines[0].trim().toLowerCase() === lang.toLowerCase()) {
+                rawLines.shift(); // حذف السطر الأول
+            }
+            // إعادة بناء الكود بعد الحذف والتنظيف
+            const cleanCode = rawLines.join('\n').trim();
+
+            // 3. بناء الحاوية الجديدة
             const wrapper = document.createElement('div');
             wrapper.className = 'code-wrapper';
             wrapper.innerHTML = `
@@ -217,13 +228,16 @@
                 </div>
             `;
             
-            // قبل نقل الـ pre، نحذف أي نصوص "Python" أو أزرار "Copy" الأصلية التي قد تكون داخله
-            // نركز فقط على محتوى الكود
+            // إنشاء عنصر pre جديد نظيف لتجنب بقايا HTML القديم
+            const newPre = document.createElement('pre');
+            newPre.innerText = cleanCode;
+            
             pre.parentNode.insertBefore(wrapper, pre);
-            wrapper.appendChild(pre);
+            wrapper.appendChild(newPre);
+            pre.remove(); // حذف العنصر القديم المشوه
         });
 
-        // 2. معالجة الجداول (دعم التمرير على الموبايل)
+        // تحسين الجداول
         container.querySelectorAll('table').forEach(table => {
             const wrap = document.createElement('div');
             wrap.style.overflowX = 'auto';
@@ -236,24 +250,25 @@
         const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
         await navigator.clipboard.writeText(code);
         btn.innerText = "✅ تم";
-        setTimeout(() => btn.innerText = "نسخ", 2000);
+        btn.style.background = "#2ecc71";
+        setTimeout(() => {
+            btn.innerText = "نسخ";
+            btn.style.background = "#00b894";
+        }, 2000);
     }
 
+    // دوال GitHub Actions المعتادة...
     async function startProcess() {
         const token = document.getElementById('ghToken').value.trim();
         const repo = document.getElementById('ghRepo').value.trim();
         const prompt = document.getElementById('promptInput').value.trim();
-
         if(!token || !repo || !prompt) return alert("أكمل البيانات أولاً");
-
         localStorage.setItem('cfg_token', token);
         localStorage.setItem('cfg_repo', repo);
-
         createMessage(prompt, 'user');
         document.getElementById('promptInput').value = '';
         document.getElementById('sendBtn').disabled = true;
         document.getElementById('status-bar').style.display = 'block';
-
         try {
             const startTime = new Date().toISOString();
             await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
@@ -272,16 +287,17 @@
         let attempts = 0;
         const interval = setInterval(async () => {
             attempts++;
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?created=>${startTime}&per_page=1`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            const run = data.workflow_runs[0];
-
-            if(run && run.status === "completed") {
-                clearInterval(interval);
-                fetchResult(repo, run.id, token);
-            } else if (attempts > 50) { clearInterval(interval); resetUI(); }
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?created=>${startTime}&per_page=1`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const run = data.workflow_runs[0];
+                if(run && run.status === "completed") {
+                    clearInterval(interval);
+                    fetchResult(repo, run.id, token);
+                } else if (attempts > 60) { clearInterval(interval); resetUI(); }
+            } catch(e) {}
         }, 4000);
     }
 
@@ -292,14 +308,13 @@
             });
             const data = await res.json();
             const art = data.artifacts.find(a => a.name === 'chatgpt-json');
-            
             const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
             const blob = await zipRes.blob();
             const zip = await JSZip.loadAsync(blob);
             const jsonStr = await zip.file("result.json").async("string");
             const finalData = JSON.parse(jsonStr);
             createMessage(finalData.response || finalData.message, 'bot');
-        } catch (e) { createMessage("❌ خطأ في النتيجة", 'bot'); }
+        } catch (e) { createMessage("❌ فشل جلب النتيجة", 'bot'); }
         resetUI();
     }
 
