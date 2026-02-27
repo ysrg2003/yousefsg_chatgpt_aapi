@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatgpt Pro | Clean Edition</title>
+    <title>ChatGPT Pro | Pro Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -12,8 +12,7 @@
         :root {
             --bg: #f4f7fb; --card: #ffffff; --text: #2d3436; --primary: #0984e3;
             --secondary: #dfe6e9; --user-bubble: #00b894; --bot-bubble: #ffffff;
-            --border: #dcdde1; --accent: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --border: #dcdde1; --shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
         [data-theme="dark"] {
@@ -22,7 +21,7 @@
             --border: #334155; --shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease; }
+        * { box-sizing: border-box; transition: background 0.3s ease, color 0.3s ease; }
 
         body {
             font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -69,7 +68,7 @@
 
         .bubble {
             padding: 15px 20px; border-radius: 18px; font-size: 15px; line-height: 1.7;
-            box-shadow: var(--shadow); word-wrap: break-word;
+            box-shadow: var(--shadow); word-wrap: break-word; overflow-wrap: break-word;
         }
 
         .user-align .bubble { background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; }
@@ -78,34 +77,33 @@
             width: fit-content; max-width: 98%;
         }
 
-        /* --- تحسين الجداول --- */
+        /* --- الجداول --- */
         .bubble table { 
             border-collapse: collapse; margin: 15px 0; border: 1px solid var(--border);
-            width: 100%; max-width: 100%; overflow-x: auto; display: block;
-            border-radius: 8px;
+            width: 100%; display: table; border-radius: 8px;
         }
-        .bubble th { background: var(--secondary); padding: 10px; border: 1px solid var(--border); font-weight: 600; }
+        .table-responsive { overflow-x: auto; width: 100%; margin: 10px 0; border-radius: 8px; }
+        .bubble th { background: var(--primary); color: white; padding: 10px; border: 1px solid var(--border); font-weight: 600; }
         .bubble td { padding: 8px; border: 1px solid var(--border); text-align: center; }
-        .bubble tr:nth-child(even) { background: rgba(0,0,0,0.02); }
 
-        /* --- تحسين صناديق الأكواد --- */
+        /* --- إصلاح صناديق الأكواد (حل مشكلة السطر الواحد) --- */
         .code-wrapper {
             margin: 15px 0; border-radius: 10px; overflow: hidden;
             background: #1e1e1e; direction: ltr; text-align: left;
-            border: 1px solid #333;
+            border: 1px solid #333; width: 100%;
         }
         .code-header {
-            background: #2d2d2d; color: #aaa; padding: 6px 15px; font-size: 12px;
+            background: #2d2d2d; color: #aaa; padding: 8px 15px; font-size: 12px;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid #111; font-family: monospace;
         }
         .bubble pre { 
-            margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; 
+            margin: 0; padding: 15px; color: #d4d4d4; 
             font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; font-size: 14px;
+            white-space: pre-wrap !important; /* الحل: جعل الكود يلتف ولا يظهر كسطر واحد */
+            word-break: break-all;
+            overflow-x: hidden;
         }
-
-        /* إخفاء أي عناصر غير مرغوب فيها قادمة من ChatGPT */
-        .bubble button, .bubble .sr-only, .bubble .copy-button { display: none !important; }
 
         /* Footer */
         .footer-area { padding: 15px; background: var(--card); border-top: 1px solid var(--border); text-align: center; }
@@ -126,7 +124,7 @@
         #status-bar { font-size: 12px; margin-bottom: 8px; color: var(--primary); display: none; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { #chat-viewport { padding: 15px 5%; } }
+        @media (max-width: 768px) { #chat-viewport { padding: 15px 5%; } .msg-container { max-width: 95%; } }
     </style>
 </head>
 <body data-theme="light">
@@ -150,12 +148,12 @@
 
 <div id="chat-viewport">
     <div class="msg-container bot-align">
-        <div class="bubble">أهلاً بك! تم تحسين نظام عرض الجداول والأكواد. كيف يمكنني مساعدتك؟</div>
+        <div class="bubble">أهلاً بك! تم إصلاح مشكلة التفاف الأكواد وتحسين عرض الجداول. كيف يمكنني مساعدتك؟</div>
     </div>
 </div>
 
 <div class="footer-area">
-    <div id="status-bar" class="pulse">⏳ جاري المعالجة...</div>
+    <div id="status-bar">⏳ جاري المعالجة...</div>
     <div class="input-container">
         <textarea id="promptInput" rows="1" placeholder="اسأل أي شيء..." oninput="autoResize(this)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="startProcess()">
@@ -202,44 +200,41 @@
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
 
-    // وظيفة التنظيف والتنسيق الذكية
     function formatBotResponse(container) {
-        // 1. حذف أي أزرار أو عناصر واجهة مستخدم تسللت من Scraping
+        // 1. إزالة الأزرار والزوائد
         container.querySelectorAll('button, .sr-only, [role="button"]').forEach(el => el.remove());
 
-        // 2. معالجة صناديق الأكواد
+        // 2. معالجة الأكواد
         container.querySelectorAll('pre').forEach(pre => {
-            // تنظيف النص: حذف أول سطر (الذي يحتوي عادة على اسم اللغة أو "Copy code")
             let lines = pre.innerText.split('\n');
+            
+            // تنظيف ذكي: نحذف السطر الأول فقط إذا كان كلمة واحدة (اسم اللغة)
             if (lines.length > 1) {
-                lines.shift(); // حذف السطر الأول دائماً كما طلبت
+                const firstLine = lines[0].trim().toLowerCase();
+                // إذا كان السطر الأول قصيراً جداً (غالباً اسم لغة) أو يحتوي كلمات دلالية للـ Scraping
+                if (firstLine.length < 15 || firstLine.includes('copy code')) {
+                    lines.shift(); 
+                }
             }
+            
             const cleanedCode = lines.join('\n').trim();
-
             const wrapper = document.createElement('div');
             wrapper.className = 'code-wrapper';
-            
-            // إنشاء هيدر جديد نظيف
-            const header = document.createElement('div');
-            header.className = 'code-header';
-            header.innerHTML = `<span>Code Output</span><span style="cursor:pointer; color:var(--primary)" onclick="copyRaw(this)">Copy</span>`;
+            wrapper.innerHTML = `<div class="code-header"><span>Code Output</span><span style="cursor:pointer; color:var(--primary)" onclick="copyRaw(this)">نسخ</span></div>`;
             
             const newPre = document.createElement('pre');
             newPre.innerText = cleanedCode;
-
-            wrapper.appendChild(header);
             wrapper.appendChild(newPre);
-            
             pre.parentNode.replaceChild(wrapper, pre);
         });
 
-        // 3. تحسين الجداول برمجياً لضمان التنسيق
+        // 3. معالجة الجداول
         container.querySelectorAll('table').forEach(table => {
             if(!table.parentNode.classList.contains('table-responsive')) {
-                const responsiveDiv = document.createElement('div');
-                responsiveDiv.style.overflowX = "auto";
-                table.parentNode.insertBefore(responsiveDiv, table);
-                responsiveDiv.appendChild(table);
+                const wrap = document.createElement('div');
+                wrap.className = 'table-responsive';
+                table.parentNode.insertBefore(wrap, table);
+                wrap.appendChild(table);
             }
         });
     }
@@ -247,8 +242,8 @@
     async function copyRaw(btn) {
         const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
         await navigator.clipboard.writeText(code);
-        btn.innerText = "✅ Done";
-        setTimeout(() => btn.innerText = "Copy", 2000);
+        btn.innerText = "✅ تم";
+        setTimeout(() => btn.innerText = "نسخ", 2000);
     }
 
     async function startProcess() {
@@ -256,7 +251,7 @@
         const repo = document.getElementById('ghRepo').value.trim();
         const prompt = document.getElementById('promptInput').value.trim();
 
-        if(!token || !repo || !prompt) return alert("اكمل البيانات أولاً");
+        if(!token || !repo || !prompt) return alert("يرجى ملء كافة البيانات");
 
         localStorage.setItem('cfg_token', token);
         localStorage.setItem('cfg_repo', repo);
@@ -273,7 +268,7 @@
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
             });
-            if(!res.ok) throw new Error("فشل في الاتصال بـ GitHub");
+            if(!res.ok) throw new Error("GitHub API Error");
             pollStatus(repo, token, startTime);
         } catch (e) {
             createMessage("❌ خطأ: " + e.message, 'bot');
@@ -285,7 +280,7 @@
         let attempts = 0;
         const interval = setInterval(async () => {
             attempts++;
-            if(attempts > 40) { clearInterval(interval); resetUI(); return; }
+            if(attempts > 50) { clearInterval(interval); resetUI(); return; }
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?created=>${startTime}&per_page=1`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -302,7 +297,7 @@
 
     async function fetchResult(repo, runId, token) {
         try {
-            for(let i=0; i<6; i++) {
+            for(let i=0; i<8; i++) {
                 const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -310,8 +305,7 @@
                 const art = data.artifacts.find(a => a.name === 'chatgpt-json');
                 if(art) {
                     const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
-                    const blob = await zipRes.blob();
-                    const zip = await JSZip.loadAsync(blob);
+                    const zip = await JSZip.loadAsync(await zipRes.blob());
                     const jsonStr = await zip.file("result.json").async("string");
                     const finalData = JSON.parse(jsonStr);
                     createMessage(finalData.response || finalData.message, 'bot');
