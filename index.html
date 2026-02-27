@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>chatgpt AAPI Pro | الترسانة الكاملة</title>
+    <title>Chatgpt AAPI Pro | الترسانة الكاملة</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -322,7 +322,7 @@
         document.getElementById('status-bar').style.display = 'block';
 
         try {
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
+            const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/gpt_api.yml/dispatches`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
@@ -362,7 +362,7 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const art = data.artifacts.find(a => a.name === 'chatgpt-json');
+            const art = data.artifacts.find(a => a.name === 'gpt-json');
             if (!art) throw new Error("لم يتم العثور على النتائج.");
 
             const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
