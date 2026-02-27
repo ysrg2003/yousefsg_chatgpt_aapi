@@ -1,0 +1,61 @@
+name: Gemini Simple API
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        required: true
+        type: string
+
+jobs:
+  run-system:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏁 Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📥 Download & Inject Assets
+        run: |
+          echo "📥 سحب الترسانة المضغوطة بـ Zstd..."
+          gh release download v1.0.0 -p "vendor_assets.tar.zst"
+          
+          echo "⚡ فك الضغط فائق السرعة..."
+          # -x: extract, -I: zstd, -f: file
+          mkdir -p .temp_vendor
+          tar -I zstd -xf vendor_assets.tar.zst -C .
+          
+          # ملاحظة: بما أننا ضغطنا المحتويات مباشرة، الملفات ستنتشر في المجلد الحالي
+          # (python, browsers, camoufox_cache)
+          
+          echo "🔗 ربط المحرك..."
+          mkdir -p /home/runner/.cache
+          ln -sf $(pwd)/camoufox_cache /home/runner/.cache/camoufox
+          
+          chmod -R +x /home/runner/.cache/camoufox 2>/dev/null || true
+          chmod -R +x browsers/ 2>/dev/null || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      
+      - name: 🚀 Run Automation
+        env:
+          GEMINI_COOKIES: ${{ secrets.GEMINI_COOKIES }}
+          # تعريف المسارات للمكتبات والمحركات
+          PYTHONPATH: ${{ github.workspace }}/python
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/browsers
+          # إجبار المحرك على النظر في المسار المربوط
+          CAMOUFOX_CACHE_DIR: /home/runner/.cache/camoufox
+        run: |
+          echo "🎬 تشغيل المحرك الرئيسي..."
+          python main.py "${{ github.event.inputs.prompt }}"
+
+      - name: 📤 Upload Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-json
+          path: result.json
