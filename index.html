@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gemini AAPI Pro | الترسانة الكاملة</title>
+    <title>Chatgpt AAPI Pro | الترسانة الكاملة</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -148,7 +148,7 @@
 <body data-theme="light">
 
 <header>
-    <div class="logo">Gemini AAPI Pro</div>
+    <div class="logo">Chatgpt AAPI Pro</div>
     <div class="nav-tools">
         <button class="tool-btn" onclick="toggleSettings()">⚙️</button>
         <button class="tool-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
@@ -294,7 +294,7 @@
         document.getElementById('status-bar').style.display = 'block';
 
         try {
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/gemini_api.yml/dispatches`, {
+            const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
@@ -334,7 +334,7 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const art = data.artifacts.find(a => a.name === 'gemini-json');
+            const art = data.artifacts.find(a => a.name === 'chatgpt-json');
             if (!art) throw new Error("لم يتم العثور على النتائج.");
 
             const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
