@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatGPT Pro | Flexible Edition</title>
+    <title>Chatgpt Pro | Clean Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -12,8 +12,8 @@
         :root {
             --bg: #f4f7fb; --card: #ffffff; --text: #2d3436; --primary: #0984e3;
             --secondary: #dfe6e9; --user-bubble: #00b894; --bot-bubble: #ffffff;
-            --border: #dcdde1; --shadow: 0 10px 30px rgba(0,0,0,0.05);
-            --code-bg: #1e1e1e;
+            --border: #dcdde1; --accent: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
         [data-theme="dark"] {
@@ -31,33 +31,45 @@
             height: 100vh; height: 100dvh; overflow: hidden;
         }
 
-        /* --- Header --- */
+        /* Header */
         header {
             flex-shrink: 0; padding: 12px 20px; display: flex; justify-content: space-between;
             align-items: center; background: var(--card); border-bottom: 1px solid var(--border);
-            z-index: 10;
+            box-shadow: var(--shadow); z-index: 10;
         }
         .logo-text { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+
         .nav-tools { display: flex; gap: 8px; }
         .tool-btn {
             background: var(--secondary); border: none; color: var(--text);
-            width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+            width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- Chat Viewport --- */
+        /* Settings */
+        #settings-panel {
+            background: var(--card); padding: 15px; border-bottom: 1px solid var(--border);
+            display: none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .input-field input { 
+            width: 100%; padding: 10px; border-radius: 8px; 
+            border: 1px solid var(--border); background: var(--bg); color: var(--text); 
+        }
+
+        /* Chat Viewport */
         #chat-viewport {
             flex: 1; overflow-y: auto; padding: 20px 10%; 
             display: flex; flex-direction: column; gap: 20px;
         }
 
-        .msg-container { display: flex; flex-direction: column; max-width: 90%; animation: fadeIn 0.3s ease; }
+        .msg-container { display: flex; flex-direction: column; max-width: 90%; animation: slideIn 0.3s ease; }
         .user-align { align-self: flex-start; }
         .bot-align { align-self: flex-end; width: 100%; align-items: flex-end; }
 
         .bubble {
             padding: 15px 20px; border-radius: 18px; font-size: 15px; line-height: 1.7;
-            box-shadow: var(--shadow); position: relative;
+            box-shadow: var(--shadow); word-wrap: break-word;
         }
 
         .user-align .bubble { background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; }
@@ -66,59 +78,64 @@
             width: fit-content; max-width: 98%;
         }
 
-        /* --- تنظيف محتوى ChatGPT (تعديل هام جداً لزر النسخ) --- */
-        /* إخفاء أزرار ChatGPT الأصلية فقط واستثناء زر النسخ الخاص بنا */
-        .bubble button:not(.copy-btn-custom), 
-        .bubble svg, 
-        .bubble .sr-only,
-        .bubble [class*="copy"]:not(.copy-btn-custom) { 
-            display: none !important; 
-        }
-
         /* --- تحسين الجداول --- */
-        .bubble table {
-            border-collapse: collapse; width: 100%; margin: 15px 0;
-            border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+        .bubble table { 
+            border-collapse: collapse; margin: 15px 0; border: 1px solid var(--border);
+            width: 100%; max-width: 100%; overflow-x: auto; display: block;
+            border-radius: 8px;
         }
-        .bubble th { background: var(--secondary); padding: 12px; text-align: right; font-weight: 600; }
-        .bubble td { padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); }
+        .bubble th { background: var(--secondary); padding: 10px; border: 1px solid var(--border); font-weight: 600; }
+        .bubble td { padding: 8px; border: 1px solid var(--border); text-align: center; }
+        .bubble tr:nth-child(even) { background: rgba(0,0,0,0.02); }
 
-        /* --- تحسين صناديق الكود --- */
+        /* --- تحسين صناديق الأكواد --- */
         .code-wrapper {
             margin: 15px 0; border-radius: 10px; overflow: hidden;
-            background: var(--code-bg); direction: ltr; text-align: left;
+            background: #1e1e1e; direction: ltr; text-align: left;
+            border: 1px solid #333;
         }
         .code-header {
-            background: #2d2d2d; color: #fff; padding: 6px 15px; font-size: 12px;
+            background: #2d2d2d; color: #aaa; padding: 6px 15px; font-size: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #3d3d3d; font-family: monospace;
+            border-bottom: 1px solid #111; font-family: monospace;
         }
-        .copy-btn-custom {
-            display: inline-block !important; background: #00b894; color: #fff; border: none;
-            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;
+        .bubble pre { 
+            margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; 
+            font-family: 'Consolas', 'Monaco', monospace; line-height: 1.5; font-size: 14px;
         }
-        .copy-btn-custom:hover { background: #00967a; }
-        
-        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; font-size: 14px; }
 
-        /* --- Footer --- */
-        .footer-area { padding: 15px; background: var(--card); border-top: 1px solid var(--border); }
+        /* إخفاء أي عناصر غير مرغوب فيها قادمة من ChatGPT */
+        .bubble button, .bubble .sr-only, .bubble .copy-button { display: none !important; }
+
+        /* Footer */
+        .footer-area { padding: 15px; background: var(--card); border-top: 1px solid var(--border); text-align: center; }
         .input-container {
-            max-width: 800px; margin: 0 auto; background: var(--bg);
+            width: 100%; max-width: 800px; background: var(--bg);
             border: 2px solid var(--border); border-radius: 25px;
-            display: flex; align-items: center; padding: 5px 15px;
+            display: flex; align-items: center; padding: 4px 12px; margin: 0 auto;
         }
-        textarea { flex: 1; background: transparent; border: none; color: var(--text); padding: 10px; outline: none; resize: none; max-height: 150px; }
-        .send-btn { background: var(--primary); color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        textarea { 
+            flex: 1; background: transparent; border: none; color: var(--text); 
+            padding: 10px; font-size: 15px; outline: none; resize: none; max-height: 120px;
+        }
+        .send-btn { 
+            background: var(--primary); color: white; border: none; 
+            width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #status-bar { font-size: 12px; margin-bottom: 8px; color: var(--primary); display: none; }
 
-        #status-bar { font-size: 12px; text-align: center; margin-bottom: 8px; color: var(--primary); display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { #chat-viewport { padding: 15px 5%; } }
     </style>
 </head>
 <body data-theme="light">
 
 <header>
-    <div class="logo-text">🤖 ChatGPT Pro <small>Flex</small></div>
+    <div class="logo-area">
+        <span style="font-size: 20px;">🤖</span>
+        <div class="logo-text">ChatGPT Pro <small style="font-weight: 300; font-size: 9px;">Clean</small></div>
+    </div>
     <div class="nav-tools">
         <button class="tool-btn" onclick="clearChat()">🗑️</button>
         <button class="tool-btn" onclick="toggleSettings()">⚙️</button>
@@ -126,21 +143,21 @@
     </div>
 </header>
 
-<div id="settings-panel" style="display:none; padding:15px; background:var(--card); border-bottom:1px solid var(--border); gap:10px; grid-template-columns: 1fr 1fr;">
-    <input type="password" id="ghToken" placeholder="GitHub Token">
-    <input type="text" id="ghRepo" placeholder="username/repo">
+<div id="settings-panel">
+    <div class="input-field"><input type="password" id="ghToken" placeholder="GitHub Token"></div>
+    <div class="input-field"><input type="text" id="ghRepo" placeholder="username/repo"></div>
 </div>
 
 <div id="chat-viewport">
     <div class="msg-container bot-align">
-        <div class="bubble">مرحباً! تم إصلاح زر النسخ وحذف تكرار اسم اللغة في الكود. جرب الآن!</div>
+        <div class="bubble">أهلاً بك! تم تحسين نظام عرض الجداول والأكواد. كيف يمكنني مساعدتك؟</div>
     </div>
 </div>
 
 <div class="footer-area">
-    <div id="status-bar">⏳ جاري معالجة طلبك...</div>
+    <div id="status-bar" class="pulse">⏳ جاري المعالجة...</div>
     <div class="input-container">
-        <textarea id="promptInput" rows="1" placeholder="اكتب سؤالك هنا..." oninput="autoResize(this)"></textarea>
+        <textarea id="promptInput" rows="1" placeholder="اسأل أي شيء..." oninput="autoResize(this)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="startProcess()">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -160,23 +177,10 @@
         localStorage.setItem('cfg_theme', theme);
     }
 
-    function toggleTheme() {
-        applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-    }
-
-    function toggleSettings() {
-        const p = document.getElementById('settings-panel');
-        p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
-    }
-
-    function autoResize(el) {
-        el.style.height = 'auto';
-        el.style.height = el.scrollHeight + 'px';
-    }
-
-    function clearChat() {
-        if(confirm("مسح المحادثة؟")) document.getElementById('chat-viewport').innerHTML = '';
-    }
+    function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+    function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display === 'grid' ? 'none' : 'grid'; }
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+    function clearChat() { if(confirm("مسح المحادثة؟")) document.getElementById('chat-viewport').innerHTML = ''; }
 
     function createMessage(content, side) {
         const viewport = document.getElementById('chat-viewport');
@@ -188,7 +192,7 @@
         
         if (side === 'bot') {
             bubble.innerHTML = content;
-            formatContent(bubble); 
+            formatBotResponse(bubble);
         } else {
             bubble.innerText = content;
         }
@@ -198,84 +202,78 @@
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
 
-    // --- تحديث دالة التنسيق لحل مشكلة السطر الأول وزر النسخ ---
-    function formatContent(container) {
+    // وظيفة التنظيف والتنسيق الذكية
+    function formatBotResponse(container) {
+        // 1. حذف أي أزرار أو عناصر واجهة مستخدم تسللت من Scraping
+        container.querySelectorAll('button, .sr-only, [role="button"]').forEach(el => el.remove());
+
+        // 2. معالجة صناديق الأكواد
         container.querySelectorAll('pre').forEach(pre => {
-            // 1. استخراج اللغة وتحديد اسم الكود
-            let lang = "Code";
-            const codeTag = pre.querySelector('code');
-            if(codeTag) {
-                const langClass = Array.from(codeTag.classList).find(c => c.startsWith('language-'));
-                if(langClass) lang = langClass.replace('language-', '').toUpperCase();
+            // تنظيف النص: حذف أول سطر (الذي يحتوي عادة على اسم اللغة أو "Copy code")
+            let lines = pre.innerText.split('\n');
+            if (lines.length > 1) {
+                lines.shift(); // حذف السطر الأول دائماً كما طلبت
             }
+            const cleanedCode = lines.join('\n').trim();
 
-            // 2. معالجة محتوى النص (حذف السطر الأول إذا كان اسم اللغة)
-            let rawLines = pre.innerText.split('\n');
-            // إذا كان السطر الأول يحتوي فقط على اسم اللغة (تجاهل حالة الأحرف)
-            if (rawLines.length > 0 && rawLines[0].trim().toLowerCase() === lang.toLowerCase()) {
-                rawLines.shift(); // حذف السطر الأول
-            }
-            // إعادة بناء الكود بعد الحذف والتنظيف
-            const cleanCode = rawLines.join('\n').trim();
-
-            // 3. بناء الحاوية الجديدة
             const wrapper = document.createElement('div');
             wrapper.className = 'code-wrapper';
-            wrapper.innerHTML = `
-                <div class="code-header">
-                    <span>${lang}</span>
-                    <button class="copy-btn-custom" onclick="copyCode(this)">نسخ</button>
-                </div>
-            `;
             
-            // إنشاء عنصر pre جديد نظيف لتجنب بقايا HTML القديم
+            // إنشاء هيدر جديد نظيف
+            const header = document.createElement('div');
+            header.className = 'code-header';
+            header.innerHTML = `<span>Code Output</span><span style="cursor:pointer; color:var(--primary)" onclick="copyRaw(this)">Copy</span>`;
+            
             const newPre = document.createElement('pre');
-            newPre.innerText = cleanCode;
-            
-            pre.parentNode.insertBefore(wrapper, pre);
+            newPre.innerText = cleanedCode;
+
+            wrapper.appendChild(header);
             wrapper.appendChild(newPre);
-            pre.remove(); // حذف العنصر القديم المشوه
+            
+            pre.parentNode.replaceChild(wrapper, pre);
         });
 
-        // تحسين الجداول
+        // 3. تحسين الجداول برمجياً لضمان التنسيق
         container.querySelectorAll('table').forEach(table => {
-            const wrap = document.createElement('div');
-            wrap.style.overflowX = 'auto';
-            table.parentNode.insertBefore(wrap, table);
-            wrap.appendChild(table);
+            if(!table.parentNode.classList.contains('table-responsive')) {
+                const responsiveDiv = document.createElement('div');
+                responsiveDiv.style.overflowX = "auto";
+                table.parentNode.insertBefore(responsiveDiv, table);
+                responsiveDiv.appendChild(table);
+            }
         });
     }
 
-    async function copyCode(btn) {
+    async function copyRaw(btn) {
         const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
         await navigator.clipboard.writeText(code);
-        btn.innerText = "✅ تم";
-        btn.style.background = "#2ecc71";
-        setTimeout(() => {
-            btn.innerText = "نسخ";
-            btn.style.background = "#00b894";
-        }, 2000);
+        btn.innerText = "✅ Done";
+        setTimeout(() => btn.innerText = "Copy", 2000);
     }
 
-    // دوال GitHub Actions المعتادة...
     async function startProcess() {
         const token = document.getElementById('ghToken').value.trim();
         const repo = document.getElementById('ghRepo').value.trim();
         const prompt = document.getElementById('promptInput').value.trim();
-        if(!token || !repo || !prompt) return alert("أكمل البيانات أولاً");
+
+        if(!token || !repo || !prompt) return alert("اكمل البيانات أولاً");
+
         localStorage.setItem('cfg_token', token);
         localStorage.setItem('cfg_repo', repo);
+
         createMessage(prompt, 'user');
         document.getElementById('promptInput').value = '';
         document.getElementById('sendBtn').disabled = true;
         document.getElementById('status-bar').style.display = 'block';
+
         try {
             const startTime = new Date().toISOString();
-            await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
+            const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
             });
+            if(!res.ok) throw new Error("فشل في الاتصال بـ GitHub");
             pollStatus(repo, token, startTime);
         } catch (e) {
             createMessage("❌ خطأ: " + e.message, 'bot');
@@ -287,6 +285,7 @@
         let attempts = 0;
         const interval = setInterval(async () => {
             attempts++;
+            if(attempts > 40) { clearInterval(interval); resetUI(); return; }
             try {
                 const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?created=>${startTime}&per_page=1`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -296,26 +295,32 @@
                 if(run && run.status === "completed") {
                     clearInterval(interval);
                     fetchResult(repo, run.id, token);
-                } else if (attempts > 60) { clearInterval(interval); resetUI(); }
-            } catch(e) {}
+                }
+            } catch (e) {}
         }, 4000);
     }
 
     async function fetchResult(repo, runId, token) {
         try {
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            const art = data.artifacts.find(a => a.name === 'chatgpt-json');
-            const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
-            const blob = await zipRes.blob();
-            const zip = await JSZip.loadAsync(blob);
-            const jsonStr = await zip.file("result.json").async("string");
-            const finalData = JSON.parse(jsonStr);
-            createMessage(finalData.response || finalData.message, 'bot');
-        } catch (e) { createMessage("❌ فشل جلب النتيجة", 'bot'); }
-        resetUI();
+            for(let i=0; i<6; i++) {
+                const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const art = data.artifacts.find(a => a.name === 'chatgpt-json');
+                if(art) {
+                    const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const blob = await zipRes.blob();
+                    const zip = await JSZip.loadAsync(blob);
+                    const jsonStr = await zip.file("result.json").async("string");
+                    const finalData = JSON.parse(jsonStr);
+                    createMessage(finalData.response || finalData.message, 'bot');
+                    resetUI();
+                    return;
+                }
+                await new Promise(r => setTimeout(r, 3000));
+            }
+        } catch (e) { resetUI(); }
     }
 
     function resetUI() {
