@@ -79,8 +79,7 @@ async def run_chatgpt_automation(prompt):
                     break
                 await asyncio.sleep(1)
 
-            # 9. استخراج الرد الأخير مع "التنظيف العميق"
-            # نقوم بحذف الأزرار، الأيقونات، وأول سطر من كل صندوق برمجبي (اسم اللغة)
+            # 9. استخراج الرد الأخير مع "التنظيف العميق المحسن"
             final_res_html = await page.evaluate(f'''() => {{
                 const els = document.querySelectorAll("{response_selector}");
                 if (els.length === 0) return "خطأ: تعذر العثور على محتوى الرد.";
@@ -92,20 +91,32 @@ async def run_chatgpt_automation(prompt):
                 const buttons = lastMsg.querySelectorAll('button');
                 buttons.forEach(btn => btn.remove());
 
-                // ب. حذف الأيقونات (SVG) التي قد تظهر بجانب العناوين أو الأزرار
+                // ب. حذف الأيقونات (SVG)
                 const svgs = lastMsg.querySelectorAll('svg');
                 svgs.forEach(svg => svg.remove());
 
-                // ج. معالجة صناديق الكود: حذف أول سطر (الذي يحتوي عادةً على اسم اللغة أو Copy code)
+                // ج. معالجة صناديق الكود: حذف اسم اللغة (التحسين المطلوب)
                 const preBlocks = lastMsg.querySelectorAll('pre');
                 preBlocks.forEach(pre => {{
                     const code = pre.querySelector('code');
                     if (code) {{
-                        let content = code.innerText;
+                        // تنظيف الفراغات في البداية لضمان دقة الفحص
+                        let content = code.innerText.trimStart();
                         let lines = content.split('\\n');
-                        if (lines.length > 1) {{
-                            lines.shift(); // حذف السطر الأول دائماً
-                            code.innerText = lines.join('\\n');
+                        
+                        if (lines.length > 0) {{
+                            let firstLine = lines[0].trim();
+                            
+                            // معيار التحقق: كلمة واحدة بدون مسافات ولا تحتوي على رموز برمجية
+                            const isSingleWord = !firstLine.includes(' ') && firstLine.length > 0;
+                            const noCodeSymbols = !/[=(){}\\[\\];<>!#\\/]/.test(firstLine);
+
+                            if (isSingleWord && noCodeSymbols) {{
+                                lines.shift(); // حذف السطر الذي يحتوي على اسم اللغة فقط
+                            }}
+                            
+                            // إعادة تعيين النص المنظف مع إزالة الفراغات الزائدة في البداية
+                            code.innerText = lines.join('\\n').trimStart();
                         }}
                     }}
                 }});
