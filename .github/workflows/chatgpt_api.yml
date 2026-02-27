@@ -1,4 +1,4 @@
-name: ChatgptSimple API
+name: Chatgpt Simple API
 on:
   workflow_dispatch:
     inputs:
