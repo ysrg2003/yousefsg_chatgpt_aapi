@@ -105,9 +105,9 @@ async def run_chatgpt_automation(prompt):
         output = {"status": "error", "message": str(e)}
 
     # 9. حفظ النتيجة
-    with open("chatgpt_result.json", "w", encoding="utf-8") as f:
+    with open("result.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=4)
-    print("💾 تم حفظ الرد في chatgpt_result.json")
+    print("💾 تم حفظ الرد في result.json")
 
 if __name__ == "__main__":
     user_prompt = sys.argv[1] if len(sys.argv) > 1 else "أهلاً، كيف حالك اليوم؟"
