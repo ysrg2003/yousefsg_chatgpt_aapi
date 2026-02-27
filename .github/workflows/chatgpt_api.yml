@@ -43,7 +43,7 @@ jobs:
       
       - name: 🚀 Run Automation
         env:
-          GEMINI_COOKIES: ${{ secrets.GEMINI_COOKIES }}
+          CHATGPT_COOKIES: ${{ secrets.CHATGPT_COOKIES }}
           # تعريف المسارات للمكتبات والمحركات
           PYTHONPATH: ${{ github.workspace }}/python
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/browsers
