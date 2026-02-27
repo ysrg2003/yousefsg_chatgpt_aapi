@@ -79,8 +79,7 @@ async def run_chatgpt_automation(prompt):
                     break
                 await asyncio.sleep(1)
 
-            # 9. استخراج الرد الأخير مع "التنظيف العميق"
-            # نقوم بحذف الأزرار، الأيقونات، وأول سطر من كل صندوق برمجبي (اسم اللغة)
+            # 9. استخراج الرد الأخير مع "التنظيف الجذري" (Aggressive Cleaning)
             final_res_html = await page.evaluate(f'''() => {{
                 const els = document.querySelectorAll("{response_selector}");
                 if (els.length === 0) return "خطأ: تعذر العثور على محتوى الرد.";
@@ -88,25 +87,35 @@ async def run_chatgpt_automation(prompt):
                 // نأخذ نسخة من الرسالة الأخيرة للعمل عليها
                 const lastMsg = els[els.length - 1].cloneNode(true);
 
-                // أ. حذف جميع الأزرار (أزرار النسخ، الاستماع، إلخ)
+                // أ. حذف جميع الأزرار (أزرار النسخ، الاستماع، إلخ) تماماً
                 const buttons = lastMsg.querySelectorAll('button');
                 buttons.forEach(btn => btn.remove());
 
-                // ب. حذف الأيقونات (SVG) التي قد تظهر بجانب العناوين أو الأزرار
+                // ب. حذف الأيقونات (SVG) نهائياً
                 const svgs = lastMsg.querySelectorAll('svg');
                 svgs.forEach(svg => svg.remove());
 
-                // ج. معالجة صناديق الكود: حذف أول سطر (الذي يحتوي عادةً على اسم اللغة أو Copy code)
+                // ج. معالجة صناديق الكود (حذف الرأس والسطر الأول بدون تفكير)
                 const preBlocks = lastMsg.querySelectorAll('pre');
                 preBlocks.forEach(pre => {{
-                    const code = pre.querySelector('code');
-                    if (code) {{
-                        let content = code.innerText;
-                        let lines = content.split('\\n');
-                        if (lines.length > 1) {{
-                            lines.shift(); // حذف السطر الأول دائماً
-                            code.innerText = lines.join('\\n');
+                    // 1. إزالة "شريط العنوان" الخاص بـ ChatGPT (الذي يحتوي عادةً على اسم اللغة وزر النسخ)
+                    const headerElements = pre.querySelectorAll('div.flex.items-center, .flex.items-center.relative');
+                    headerElements.forEach(h => h.remove());
+
+                    // 2. الوصول للكود وحذف أول سطر نصي دائماً
+                    const codeNode = pre.querySelector('code') || pre;
+                    let text = codeNode.innerText;
+                    
+                    let lines = text.split('\\n');
+                    if (lines.length > 0) {{
+                        lines.shift(); // حذف السطر الأول (اسم اللغة)
+                        
+                        // تنظيف أي أسطر فارغة بقيت في البداية بعد الحذف
+                        while (lines.length > 0 && lines[0].trim() === "") {{
+                            lines.shift();
                         }}
+                        
+                        codeNode.innerText = lines.join('\\n');
                     }}
                 }});
 
