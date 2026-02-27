@@ -1,4 +1,4 @@
-name: Chatgpt Simple API
+name: ChatGPT Simple API
 on:
   workflow_dispatch:
     inputs:
@@ -24,12 +24,8 @@ jobs:
           gh release download v1.0.0 -p "vendor_assets.tar.zst"
           
           echo "⚡ فك الضغط فائق السرعة..."
-          # -x: extract, -I: zstd, -f: file
           mkdir -p .temp_vendor
           tar -I zstd -xf vendor_assets.tar.zst -C .
-          
-          # ملاحظة: بما أننا ضغطنا المحتويات مباشرة، الملفات ستنتشر في المجلد الحالي
-          # (python, browsers, camoufox_cache)
           
           echo "🔗 ربط المحرك..."
           mkdir -p /home/runner/.cache
@@ -40,22 +36,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      
-      - name: 🚀 Run Automation
+      - name: 🚀 Run ChatGPT Automation
         env:
-          CHATGPT_COOKIES: ${{ secrets.CHATGPT_COOKIES }}
-          # تعريف المسارات للمكتبات والمحركات
+          # تم تغيير اسم السكرت ليتناسب مع ChatGPT
+          GPT_COOKIES: ${{ secrets.GPT_COOKIES }}
           PYTHONPATH: ${{ github.workspace }}/python
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/browsers
-          # إجبار المحرك على النظر في المسار المربوط
           CAMOUFOX_CACHE_DIR: /home/runner/.cache/camoufox
         run: |
-          echo "🎬 تشغيل المحرك الرئيسي..."
-          python main.py "${{ github.event.inputs.prompt }}"
+          echo "🎬 تشغيل محرك ChatGPT..."
+          # تشغيل ملف البايثون المخصص لـ ChatGPT
+          python main_gpt.py "${{ github.event.inputs.prompt }}"
 
       - name: 📤 Upload Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chatgpt-json
+          # تم تغيير اسم الأرتيفاكت لتمييز نتائج ChatGPT
+          name: gpt-json
           path: result.json
