@@ -3,30 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatgpt AAPI Pro | الترسانة الكاملة</title>
+    <title>Chatgpt AAPI Pro | Flexible Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #f8f9fa; --card: #ffffff; --text: #1f1f1f; --primary: #1a73e8;
-            --secondary: #f1f3f4; --user-bubble: #e8f0fe; --bot-bubble: #ffffff;
-            --border: #dee2e6; --accent: linear-gradient(135deg, #1a73e8, #701af0);
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --code-bg: #1e1e1e; --code-text: #d4d4d4;
-            --code-header: #2d2d2d;
+            --bg: #f4f7fb; --card: #ffffff; --text: #2d3436; --primary: #0984e3;
+            --secondary: #dfe6e9; --user-bubble: #00b894; --bot-bubble: #ffffff;
+            --border: #dcdde1; --accent: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --code-bg: #2d3436; --code-text: #fab1a0;
         }
 
         [data-theme="dark"] {
-            --bg: #131314; --card: #1e1f20; --text: #e3e3e3; --primary: #8ab4f8;
-            --secondary: #2d2f31; --user-bubble: #004a77; --bot-bubble: #1e1f20;
-            --border: #444746; --shadow: 0 4px 25px rgba(0,0,0,0.3);
-            --code-bg: #000000; --code-text: #e3e3e3;
-            --code-header: #1a1a1a;
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --primary: #38bdf8;
+            --secondary: #334155; --user-bubble: #0f766e; --bot-bubble: #1e293b;
+            --border: #334155; --shadow: 0 10px 30px rgba(0,0,0,0.3);
+            --code-bg: #000000; --code-text: #94a3b8;
         }
 
-        * { box-sizing: border-box; transition: background 0.25s, color 0.25s; }
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
         body {
             font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -35,172 +33,174 @@
             height: 100vh; height: 100dvh; overflow: hidden;
         }
 
+        /* Header */
         header {
-            flex-shrink: 0; padding: 12px 24px; display: flex; justify-content: space-between;
+            flex-shrink: 0; padding: 15px 25px; display: flex; justify-content: space-between;
             align-items: center; background: var(--card); border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow); z-index: 1000;
+            box-shadow: var(--shadow); z-index: 10;
         }
 
-        .logo { font-size: 1.4rem; font-weight: 600; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
 
-        .nav-tools { display: flex; gap: 12px; }
+        .nav-tools { display: flex; gap: 8px; }
         .tool-btn {
             background: var(--secondary); border: none; color: var(--text);
-            width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
+        .tool-btn:hover { transform: translateY(-2px); filter: brightness(0.9); }
 
+        /* Settings */
         #settings-panel {
             background: var(--card); padding: 20px; border-bottom: 1px solid var(--border);
-            display: none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px; flex-shrink: 0;
+            display: none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .input-field { display: flex; flex-direction: column; gap: 5px; }
-        .input-field label { font-size: 12px; font-weight: bold; opacity: 0.8; }
-        .input-field input { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--secondary); color: var(--text); }
+        .input-field input { 
+            width: 100%; padding: 10px; border-radius: 8px; 
+            border: 1px solid var(--border); background: var(--bg); color: var(--text); 
+        }
 
+        /* Chat Viewport */
         #chat-viewport {
-            flex: 1; overflow-y: auto; padding: 20px 10%; 
-            display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
+            flex: 1; overflow-y: auto; padding: 30px 15%; 
+            display: flex; flex-direction: column; gap: 25px;
         }
 
-        .msg-container { display: flex; flex-direction: column; max-width: 100%; animation: fadeIn 0.3s ease; }
+        .msg-container { display: flex; flex-direction: column; max-width: 85%; animation: slideIn 0.4s ease-out; }
         .user-align { align-self: flex-start; }
         .bot-align { align-self: flex-end; width: 100%; align-items: flex-end; }
 
         .bubble {
-            padding: 16px 22px; border-radius: 20px; font-size: 15.5px; line-height: 1.7;
-            word-wrap: break-word; overflow-wrap: break-word; position: relative;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04); max-width: 100%;
+            padding: 18px 24px; border-radius: 22px; font-size: 15px; line-height: 1.8;
+            position: relative; box-shadow: var(--shadow);
         }
 
-        /* منع أي أزرار غريبة قادمة من سكرابينج جوجل من الظهور */
-        .bubble button:not(.copy-btn-snippet) { display: none !important; }
+        .user-align .bubble { 
+            background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; 
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        .bot-align .bubble { 
+            background: var(--bot-bubble); border: 1px solid var(--border); border-bottom-left-radius: 4px;
+            width: fit-content; max-width: 95%;
+        }
 
-        .user-align .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; }
-        .bot-align .bubble { background: var(--bot-bubble); border: 1px solid var(--border); border-bottom-left-radius: 4px; max-width: 92%; }
+        /* Markdown Styles Inside Bubble */
+        .bubble ul, .bubble ol { padding-right: 20px; margin: 10px 0; }
+        .bubble table { border-collapse: collapse; width: 100%; margin: 10px 0; border: 1px solid var(--border); }
+        .bubble th, .bubble td { border: 1px solid var(--border); padding: 8px; text-align: right; }
 
-        /* --- حاوية الكود المطور --- */
+        /* Code Blocks */
         .code-wrapper {
-            margin: 15px 0; border-radius: 10px; overflow: hidden;
-            border: 1px solid var(--border); background: var(--code-bg);
-            direction: ltr; text-align: left;
+            margin: 15px 0; border-radius: 12px; overflow: hidden;
+            background: #1e1e1e; direction: ltr; text-align: left;
         }
-
-        .code-header-bar {
+        .code-header {
+            background: #333; color: #eee; padding: 8px 15px; font-size: 11px;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 15px; background: var(--code-header);
-            color: #00cf7f; font-size: 11px; font-family: monospace;
-            font-weight: bold; text-transform: uppercase;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
+        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; }
 
-        .copy-btn-snippet {
-            background: rgba(255,255,255,0.1); border: none; color: #fff;
-            padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-        }
-        .copy-btn-snippet:hover { background: rgba(255,255,255,0.2); }
-
-        .bubble pre { 
-            margin: 0 !important; padding: 15px; overflow-x: auto;
-            color: var(--code-text); font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px; line-height: 1.5; background: transparent !important;
-        }
-
+        /* Footer */
         .footer-area {
-            flex-shrink: 0; padding: 15px; background: var(--card); 
-            border-top: 1px solid var(--border); width: 100%;
+            padding: 20px; background: var(--card); border-top: 1px solid var(--border);
             display: flex; flex-direction: column; align-items: center;
         }
 
         .input-container {
-            width: 100%; max-width: 800px; background: var(--secondary);
-            border: 1px solid var(--border); border-radius: 24px;
-            display: flex; align-items: center; padding: 4px 12px;
+            width: 100%; max-width: 850px; background: var(--bg);
+            border: 2px solid var(--border); border-radius: 30px;
+            display: flex; align-items: center; padding: 5px 15px;
+        }
+        .input-container:focus-within { border-color: var(--primary); }
+
+        textarea { 
+            flex: 1; background: transparent; border: none; color: var(--text); 
+            padding: 12px; font-size: 15px; outline: none; resize: none; max-height: 150px;
         }
 
-        textarea {
-            flex: 1; background: transparent; border: none; color: var(--text);
-            padding: 10px; font-size: 15px; resize: none; outline: none;
-            max-height: 120px; min-height: 24px; font-family: inherit;
-        }
-
-        .send-btn {
-            background: var(--primary); color: white; border: none;
-            width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+        .send-btn { 
+            background: var(--primary); color: white; border: none; 
+            width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
+        .send-btn:disabled { filter: grayscale(1); opacity: 0.5; }
 
-        #status-bar { font-size: 12px; margin-bottom: 8px; color: var(--primary); font-weight: 700; display: none; }
-        .loader { width: 12px; height: 12px; border: 2px solid var(--primary); border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-left: 8px; }
+        /* Status & Loaders */
+        #status-bar { font-size: 13px; margin-bottom: 10px; color: var(--primary); font-weight: 600; display: none; }
+        .pulse { animation: pulse-animation 1.5s infinite; }
 
-        @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 768px) {
             #chat-viewport { padding: 20px 5%; }
-            .bot-align .bubble { max-width: 95%; }
+            .msg-container { max-width: 95%; }
         }
     </style>
 </head>
 <body data-theme="light">
 
 <header>
-    <div class="logo">Chatgpt AAPI Pro</div>
+    <div class="logo-area">
+        <span style="font-size: 24px;">🤖</span>
+        <div class="logo-text">ChatGPT Pro <small style="font-weight: 300; font-size: 10px;">Flex</small></div>
+    </div>
     <div class="nav-tools">
-        <button class="tool-btn" onclick="toggleSettings()">⚙️</button>
+        <button class="tool-btn" onclick="clearChat()" title="مسح المحادثة">🗑️</button>
+        <button class="tool-btn" onclick="toggleSettings()" title="الإعدادات">⚙️</button>
         <button class="tool-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
     </div>
 </header>
 
 <div id="settings-panel">
     <div class="input-field">
-        <label>GitHub Token</label>
-        <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+        <input type="password" id="ghToken" placeholder="GitHub Token (ghp_...)">
     </div>
     <div class="input-field">
-        <label>المستودع (User/Repo)</label>
-        <input type="text" id="ghRepo" placeholder="username/repository">
+        <input type="text" id="ghRepo" placeholder="المستودع (username/repo)">
     </div>
 </div>
 
 <div id="chat-viewport">
     <div class="msg-container bot-align">
-        <div class="bubble">مرحباً بك! تم إصلاح نظام عرض الأكواد وتصفية الأزرار الزائدة.</div>
+        <div class="bubble">أهلاً بك! النسخة المرنة جاهزة. كيف يمكنني مساعدتك اليوم؟</div>
     </div>
 </div>
 
 <div class="footer-area">
-    <div id="status-bar"><span class="loader"></span> جاري المعالجة...</div>
+    <div id="status-bar" class="pulse">⏳ جاري معالجة الطلب...</div>
     <div class="input-container">
         <textarea id="promptInput" rows="1" placeholder="اكتب سؤالك هنا..." oninput="autoResize(this)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="startProcess()">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
     </div>
 </div>
 
 <script>
+    // تهيئة البيانات عند التحميل
     window.onload = () => {
         document.getElementById('ghToken').value = localStorage.getItem('cfg_token') || '';
         document.getElementById('ghRepo').value = localStorage.getItem('cfg_repo') || '';
-        const theme = localStorage.getItem('cfg_theme') || 'light';
-        document.body.setAttribute('data-theme', theme);
-        document.getElementById('themeBtn').innerText = theme === 'light' ? '🌙' : '☀️';
+        applyTheme(localStorage.getItem('cfg_theme') || 'light');
     };
 
+    function applyTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        document.getElementById('themeBtn').innerText = theme === 'light' ? '🌙' : '☀️';
+        localStorage.setItem('cfg_theme', theme);
+    }
+
     function toggleTheme() {
-        const next = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', next);
-        localStorage.setItem('cfg_theme', next);
-        document.getElementById('themeBtn').innerText = next === 'light' ? '🌙' : '☀️';
+        applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
     }
 
     function toggleSettings() {
         const p = document.getElementById('settings-panel');
-        p.style.display = (p.style.display === 'grid' || p.style.display === 'flex') ? 'none' : 'grid';
+        p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
     }
 
     function autoResize(el) {
@@ -208,7 +208,13 @@
         el.style.height = el.scrollHeight + 'px';
     }
 
-    function createMessage(text, side) {
+    function clearChat() {
+        if(confirm("هل تريد مسح المحادثة؟")) {
+            document.getElementById('chat-viewport').innerHTML = '';
+        }
+    }
+
+    function createMessage(content, side) {
         const viewport = document.getElementById('chat-viewport');
         const container = document.createElement('div');
         container.className = `msg-container ${side}-align`;
@@ -217,102 +223,73 @@
         bubble.className = 'bubble';
         
         if (side === 'bot') {
-            // نضع الـ HTML وننظفه من أي أزرار أصلية قادمة من جوجل
-            bubble.innerHTML = text;
-
-            const preBlocks = bubble.querySelectorAll('pre');
-            preBlocks.forEach(pre => {
-                // منع التكرار إذا كان البلوك بداخل wrapper فعلاً
-                if (pre.parentElement.classList.contains('code-wrapper')) return;
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-wrapper';
-                
-                let langName = 'code';
-                const codeInside = pre.querySelector('code');
-                if(codeInside) {
-                    const classes = Array.from(codeInside.classList);
-                    const langClass = classes.find(c => c.startsWith('language-'));
-                    if(langClass) langName = langClass.replace('language-', '');
-                }
-
-                const header = document.createElement('div');
-                header.className = 'code-header-bar';
-                header.innerHTML = `<span>${langName}</span><button class="copy-btn-snippet" onclick="copySnippet(this)">نسخ</button>`;
-                
-                pre.parentNode.insertBefore(wrapper, pre);
-                wrapper.appendChild(header);
-                wrapper.appendChild(pre);
-            });
+            bubble.innerHTML = content;
+            formatContent(bubble);
         } else {
-            bubble.innerText = text;
+            bubble.innerText = content;
         }
         
         container.appendChild(bubble);
-
-        if(side === 'bot') {
-            const actions = document.createElement('div');
-            actions.className = 'msg-actions';
-            actions.innerHTML = `<span class="action-link" onclick="copyFullResponse(this)">📋 نسخ الرد كاملاً</span>`;
-            container.appendChild(actions);
-        }
-
         viewport.appendChild(container);
         viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
 
-    async function copySnippet(btn) {
-        const codeElement = btn.parentElement.nextElementSibling.querySelector('code') || btn.parentElement.nextElementSibling;
-        const text = codeElement.innerText;
-        await navigator.clipboard.writeText(text);
-        const originalText = btn.innerText;
-        btn.innerText = "✅ تم";
-        setTimeout(() => btn.innerText = originalText, 2000);
+    // تنسيق الأكواد والمحتوى
+    function formatContent(container) {
+        container.querySelectorAll('pre').forEach(pre => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-wrapper';
+            wrapper.innerHTML = `<div class="code-header"><span>Code</span><button style="cursor:pointer;background:none;border:none;color:#fff;font-size:10px;" onclick="copyCode(this)">نسخ</button></div>`;
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+        });
     }
 
-    async function copyFullResponse(el) {
-        const text = el.parentElement.previousElementSibling.innerText;
-        await navigator.clipboard.writeText(text);
-        el.innerText = "✅ تم النسخ";
-        setTimeout(() => el.innerText = "📋 نسخ الرد كاملاً", 2000);
+    async function copyCode(btn) {
+        const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
+        await navigator.clipboard.writeText(code);
+        btn.innerText = "✅ تم!";
+        setTimeout(() => btn.innerText = "نسخ", 2000);
     }
 
     async function startProcess() {
-        const token = document.getElementById('ghToken').value;
-        const repo = document.getElementById('ghRepo').value;
+        const token = document.getElementById('ghToken').value.trim();
+        const repo = document.getElementById('ghRepo').value.trim();
         const prompt = document.getElementById('promptInput').value.trim();
 
-        if(!token || !repo || !prompt) return alert("تأكد من إعداد التوكن والمستودع!");
+        if(!token || !repo || !prompt) return alert("يرجى التأكد من التوكن والمستودع وكتابة سؤال.");
 
         localStorage.setItem('cfg_token', token);
         localStorage.setItem('cfg_repo', repo);
 
         createMessage(prompt, 'user');
         document.getElementById('promptInput').value = '';
-        document.getElementById('promptInput').style.height = 'auto';
         document.getElementById('sendBtn').disabled = true;
         document.getElementById('status-bar').style.display = 'block';
 
         try {
+            const startTime = new Date().toISOString();
             const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
             });
 
-            if(!res.ok) throw new Error("خطأ في الاتصال بـ GitHub.");
-            checkStatus(repo, token);
+            if(!res.ok) throw new Error("التوكن غير صحيح أو المستودع غير موجود.");
+
+            pollStatus(repo, token, startTime);
         } catch (e) {
-            createMessage("❌ خطأ: " + e.message, 'bot');
+            createMessage("❌ فشل الطلب: " + e.message, 'bot');
             resetUI();
         }
     }
 
-    async function checkStatus(repo, token) {
-        const startTime = Date.now();
+    async function pollStatus(repo, token, startTime) {
+        let attempts = 0;
         const interval = setInterval(async () => {
+            attempts++;
             try {
-                const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?per_page=1`, {
+                const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs?created=>${startTime}&per_page=1`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -320,37 +297,49 @@
 
                 if(run && run.status === "completed") {
                     clearInterval(interval);
-                    if(run.conclusion === "success") fetchArtifact(repo, run.id, token);
-                    else { createMessage("❌ فشل الأكشن في التنفيذ.", 'bot'); resetUI(); }
+                    fetchResult(repo, run.id, token);
+                } else if (attempts > 60) { // توقف بعد 3 دقائق
+                    clearInterval(interval);
+                    createMessage("⚠️ انتهى وقت الانتظار. يرجى التحقق من GitHub Actions يدويًا.", 'bot');
+                    resetUI();
                 }
             } catch (e) { console.error(e); }
-            if(Date.now() - startTime > 240000) { clearInterval(interval); resetUI(); }
-        }, 5000);
+        }, 4000);
     }
 
-    async function fetchArtifact(repo, runId, token) {
+    async function fetchResult(repo, runId, token) {
         try {
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            const art = data.artifacts.find(a => a.name === 'chatgpt-json');
-            if (!art) throw new Error("لم يتم العثور على النتائج.");
-
-            const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
-            const blob = await zipRes.blob();
-            const zip = await JSZip.loadAsync(blob);
-            const jsonStr = await zip.file("result.json").async("string");
-            
-            createMessage(JSON.parse(jsonStr).response, 'bot');
+            // محاولة جلب الـ Artifact (بحد أقصى 5 محاولات لأن GitHub يتأخر قليلاً)
+            for(let i=0; i<5; i++) {
+                const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                const art = data.artifacts.find(a => a.name === 'chatgpt-json');
+                
+                if(art) {
+                    const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const blob = await zipRes.blob();
+                    const zip = await JSZip.loadAsync(blob);
+                    const jsonStr = await zip.file("result.json").async("string");
+                    const finalData = JSON.parse(jsonStr);
+                    createMessage(finalData.response || finalData.message, 'bot');
+                    resetUI();
+                    return;
+                }
+                await new Promise(r => setTimeout(r, 3000));
+            }
+            throw new Error("لم يظهر ملف النتيجة بعد. حاول مرة أخرى.");
         } catch (e) {
-            createMessage("❌ فشل استلام النتيجة: " + e.message, 'bot');
-        } finally { resetUI(); }
+            createMessage("❌ خطأ في جلب النتيجة: " + e.message, 'bot');
+            resetUI();
+        }
     }
 
     function resetUI() {
         document.getElementById('sendBtn').disabled = false;
         document.getElementById('status-bar').style.display = 'none';
+        document.getElementById('promptInput').style.height = 'auto';
     }
 </script>
 </body>
