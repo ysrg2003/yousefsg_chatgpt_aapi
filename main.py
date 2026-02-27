@@ -12,9 +12,9 @@ except ImportError:
     sys.exit(1)
 
 # الرابط الأساسي لجيمناي
-GEMINI_URL = "https://chatgpt.com"
+CHATGPT_URL = "https://chatgpt.com"
 
-async def run_gemini_automation(prompt):
+async def run_chatgpt_automation(prompt):
     print(f"🧐 جاري معالجة الطلب: {prompt}")
     
     # هيكل افتراضي للمخرجات في حال حدث خطأ
@@ -36,7 +36,7 @@ async def run_gemini_automation(prompt):
             )
 
             # 4. إدارة الجلسة (Session) عبر الكوكيز
-            cookies_json = os.getenv("GEMINI_COOKIES")
+            cookies_json = os.getenv("CHATGPT_COOKIES")
             if cookies_json:
                 try:
                     await context.add_cookies(json.loads(cookies_json))
@@ -47,8 +47,8 @@ async def run_gemini_automation(prompt):
             page = await context.new_page()
             
             # 5. الدخول إلى الموقع وانتظار الهيكل الأساسي
-            print("🌐 الإبحار إلى Gemini...")
-            await page.goto(GEMINI_URL, wait_until="domcontentloaded", timeout=60000)
+            print("🌐 الإبحار إلى Chatgpt...")
+            await page.goto(CHATGPT_URL, wait_until="domcontentloaded", timeout=60000)
 
             # 6. البحث عن صندوق الإدخال (Selector)
             input_selector = "div[role='textbox'], [contenteditable='true'], #input-area"
@@ -115,4 +115,4 @@ async def run_gemini_automation(prompt):
 if __name__ == "__main__":
     # قراءة السؤال من سطر الأوامر (Command Line Argument)
     user_prompt = sys.argv[1] if len(sys.argv) > 1 else "Hello"
-    asyncio.run(run_gemini_automation(user_prompt))
+    asyncio.run(run_chatgpt_automation(user_prompt))
