@@ -24,7 +24,7 @@
             --code-bg: #000000; --code-text: #94a3b8;
         }
 
-        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
 
         body {
             font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -67,6 +67,7 @@
         #chat-viewport {
             flex: 1; overflow-y: auto; padding: 30px 15%; 
             display: flex; flex-direction: column; gap: 25px;
+            scroll-behavior: smooth;
         }
 
         .msg-container { display: flex; flex-direction: column; max-width: 85%; animation: slideIn 0.4s ease-out; }
@@ -87,28 +88,27 @@
             width: fit-content; max-width: 95%;
         }
 
-        /* Markdown Styles Inside Bubble */
-        .bubble ul, .bubble ol { padding-right: 20px; margin: 10px 0; }
-
-        /* تحسين شكل الجداول */
+        /* --- تحسين الجداول الجديد --- */
         .bubble table {
             border-collapse: collapse;
             width: 100%;
             margin: 15px 0;
             background: var(--bg);
             border-radius: 8px;
-            overflow: hidden; /* لمنع بروز الحواف */
+            overflow: hidden;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: block; /* لجعل الجدول قابلاً للتمرير على الموبايل */
+            display: block; 
             overflow-x: auto;
+            border: 1px solid var(--border);
         }
 
         .bubble th {
             background: var(--primary);
-            color: white;
+            color: white !important;
             padding: 12px;
             text-align: right;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .bubble td {
@@ -116,22 +116,32 @@
             padding: 10px;
             text-align: right;
             min-width: 100px;
+            color: var(--text);
         }
 
         .bubble tr:nth-child(even) {
-            background-color: rgba(0,0,0,0.02);
+            background-color: rgba(0,0,0,0.03);
+        }
+
+        /* حماية: إخفاء أي أزرار أو عناصر واجهة مسربة من Scraping */
+        .bubble button, 
+        .bubble .sr-only,
+        .bubble svg:not(.keep) { 
+            display: none !important; 
         }
 
         /* Code Blocks */
         .code-wrapper {
             margin: 15px 0; border-radius: 12px; overflow: hidden;
             background: #1e1e1e; direction: ltr; text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .code-header {
             background: #333; color: #eee; padding: 8px 15px; font-size: 11px;
             display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #444;
         }
-        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; }
+        .bubble pre { margin: 0; padding: 15px; overflow-x: auto; color: #d4d4d4; font-family: 'Consolas', monospace; font-size: 14px; }
 
         /* Footer */
         .footer-area {
@@ -158,7 +168,6 @@
         }
         .send-btn:disabled { filter: grayscale(1); opacity: 0.5; }
 
-        /* Status & Loaders */
         #status-bar { font-size: 13px; margin-bottom: 10px; color: var(--primary); font-weight: 600; display: none; }
         .pulse { animation: pulse-animation 1.5s infinite; }
 
@@ -168,6 +177,7 @@
         @media (max-width: 768px) {
             #chat-viewport { padding: 20px 5%; }
             .msg-container { max-width: 95%; }
+            .bubble { padding: 15px 18px; font-size: 14px; }
         }
     </style>
 </head>
@@ -196,7 +206,7 @@
 
 <div id="chat-viewport">
     <div class="msg-container bot-align">
-        <div class="bubble">أهلاً بك! النسخة المرنة جاهزة. كيف يمكنني مساعدتك اليوم؟</div>
+        <div class="bubble">أهلاً بك! النظام المطور جاهز الآن بجداول محسنة وأكواد نظيفة. كيف يمكنني مساعدتك؟</div>
     </div>
 </div>
 
@@ -211,7 +221,6 @@
 </div>
 
 <script>
-    // تهيئة البيانات عند التحميل
     window.onload = () => {
         document.getElementById('ghToken').value = localStorage.getItem('cfg_token') || '';
         document.getElementById('ghRepo').value = localStorage.getItem('cfg_repo') || '';
@@ -253,7 +262,6 @@
         bubble.className = 'bubble';
         
         if (side === 'bot') {
-            // إذا المحتوى HTML (مثل رد يحتوي على <pre>، جداول...) نضعه كـ innerHTML
             bubble.innerHTML = content;
             formatContent(bubble);
         } else {
@@ -262,111 +270,41 @@
         
         container.appendChild(bubble);
         viewport.appendChild(container);
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        viewport.scrollTop = viewport.scrollHeight;
     }
 
-    // ===========================
-    // تنسيق الأكواد والمحتوى — محدث كما طلبت
-    //  - يحذف أزرار الـ scraping
-    //  - يحذف أي عناصر تسميات لغات شائعة
-    //  - يحذف السطر الأول داخل كل <pre> دائماً
-    //  - يضيف غلاف واحد موحد وزر نسخ واحد فقط
-    // ===========================
     function formatContent(container) {
-        // 1) إزالة أي أزرار أو عناصر دور button جاءت من الـ scraping
-        container.querySelectorAll('button, [role="button"], .copy-button, .btn-copy, .copy-btn, .clipboard-btn').forEach(el => el.remove());
-
-        // 2) إزالة أي عناصر تسميات اللغة الشائعة
-        container.querySelectorAll('.lang, .language-label, .highlight-lang, .code-lang, .language').forEach(el => el.remove());
-
-        // 3) تنظيف أي عناصر صغيرة تشير إلى "نسخ" أو "copy" (نصوص/spans)
-        container.querySelectorAll('span, div').forEach(el => {
-            const t = (el.innerText || '').trim().toLowerCase();
-            if (t === 'copy' || t === 'نسخ' || t === 'copy code' || t === 'copy to clipboard') {
-                el.remove();
-            }
-        });
-
-        // 4) معالجة كل <pre> داخل الحاوية
+        // تنسيق صناديق الكود وإضافة زر النسخ الخاص بنا
         container.querySelectorAll('pre').forEach(pre => {
-            try {
-                // استخدام innerText للحصول على تمثيل نصي نظيف
-                const rawText = pre.innerText.replace(/\r/g, '');
-                const lines = rawText.split('\n');
-
-                // حذف السطر الأول دائماً كما طلبت
-                if (lines.length > 0) lines.shift();
-
-                // إعادة المحتوى كنص خام (لا HTML)
-                pre.textContent = lines.join('\n');
-
-                // إنشاء الغلاف (إذا لم يكن موجوداً بالفعل)
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-wrapper';
-                wrapper.style.direction = 'ltr';
-
-                const header = document.createElement('div');
-                header.className = 'code-header';
-
-                const titleSpan = document.createElement('span');
-                titleSpan.textContent = 'Code';
-
-                const copyBtn = document.createElement('button');
-                copyBtn.style.cursor = 'pointer';
-                copyBtn.style.background = 'none';
-                copyBtn.style.border = 'none';
-                copyBtn.style.color = '#fff';
-                copyBtn.style.fontSize = '11px';
-                copyBtn.textContent = 'نسخ';
-                copyBtn.addEventListener('click', () => copyCode(copyBtn));
-
-                header.appendChild(titleSpan);
-                header.appendChild(copyBtn);
-
-                // استبدال pre بالغلاف الذي يحتوي الهيدر و ال pre بداخله
-                pre.parentNode.insertBefore(wrapper, pre);
-                wrapper.appendChild(header);
-                wrapper.appendChild(pre);
-
-            } catch (err) {
-                console.error('formatContent error:', err);
-            }
-        });
-
-        // تنظيف جداول أو عناصر عرض كبيرة (اختياري: نحافظ على الجداول لكن نزيل أزرارها)
-        container.querySelectorAll('table').forEach(tbl => {
-            tbl.querySelectorAll('button, [role="button"], .copy-button').forEach(x => x.remove());
+            if (pre.parentElement.className === 'code-wrapper') return;
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-wrapper';
+            
+            const header = document.createElement('div');
+            header.className = 'code-header';
+            header.innerHTML = `<span>Code</span><button style="display:block !important; cursor:pointer; background:none; border:none; color:#fff; font-size:10px;" onclick="copyCode(this)">نسخ الكود</button>`;
+            
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(header);
+            wrapper.appendChild(pre);
         });
     }
 
-    // زر النسخ الموحد لدينا
     async function copyCode(btn) {
-        try {
-            const wrapper = btn.closest('.code-wrapper');
-            if (!wrapper) return;
-            const pre = wrapper.querySelector('pre');
-            if (!pre) return;
-            const code = pre.innerText;
-            await navigator.clipboard.writeText(code);
-            const old = btn.innerText;
-            btn.innerText = "✅ تم!";
-            setTimeout(() => btn.innerText = old, 1600);
-        } catch (e) {
-            console.error('نسخ فشل:', e);
-            btn.innerText = "خطأ";
-            setTimeout(() => btn.innerText = "نسخ", 1600);
-        }
+        const code = btn.closest('.code-wrapper').querySelector('pre').innerText;
+        await navigator.clipboard.writeText(code);
+        const originalText = btn.innerText;
+        btn.innerText = "✅ تم النسخ!";
+        setTimeout(() => btn.innerText = originalText, 2000);
     }
 
-    // ===========================
-    // من هنا فصاعداً يبقى منطق إرسال الطلب إلى GitHub وتجهيز النتيجة كما كان
-    // ===========================
     async function startProcess() {
         const token = document.getElementById('ghToken').value.trim();
         const repo = document.getElementById('ghRepo').value.trim();
         const prompt = document.getElementById('promptInput').value.trim();
 
-        if(!token || !repo || !prompt) return alert("يرجى التأكد من التوكن والمستودع وكتابة سؤال.");
+        if(!token || !repo || !prompt) return alert("يرجى ملء كافة البيانات.");
 
         localStorage.setItem('cfg_token', token);
         localStorage.setItem('cfg_repo', repo);
@@ -380,15 +318,14 @@
             const startTime = new Date().toISOString();
             const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/chatgpt_api.yml/dispatches`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { prompt: prompt } })
             });
 
-            if(!res.ok) throw new Error("التوكن غير صحيح أو المستودع غير موجود.");
-
+            if(!res.ok) throw new Error("فشل إرسال الطلب لـ GitHub.");
             pollStatus(repo, token, startTime);
         } catch (e) {
-            createMessage("❌ فشل الطلب: " + e.message, 'bot');
+            createMessage("❌ خطأ: " + e.message, 'bot');
             resetUI();
         }
     }
@@ -402,14 +339,14 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                const run = data.workflow_runs ? data.workflow_runs[0] : null;
+                const run = data.workflow_runs[0];
 
                 if(run && run.status === "completed") {
                     clearInterval(interval);
                     fetchResult(repo, run.id, token);
-                } else if (attempts > 60) { // توقف بعد ~4 دقائق
+                } else if (attempts > 60) {
                     clearInterval(interval);
-                    createMessage("⚠️ انتهى وقت الانتظار. يرجى التحقق من GitHub Actions يدويًا.", 'bot');
+                    createMessage("⚠️ انتهى وقت الانتظار.", 'bot');
                     resetUI();
                 }
             } catch (e) { console.error(e); }
@@ -418,13 +355,12 @@
 
     async function fetchResult(repo, runId, token) {
         try {
-            // محاولة جلب الـ Artifact (بحد أقصى 5 محاولات لأن GitHub قد يتأخر)
             for(let i=0; i<5; i++) {
                 const res = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                const art = data.artifacts ? data.artifacts.find(a => a.name === 'chatgpt-json') : null;
+                const art = data.artifacts.find(a => a.name === 'chatgpt-json');
                 
                 if(art) {
                     const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -438,9 +374,9 @@
                 }
                 await new Promise(r => setTimeout(r, 3000));
             }
-            throw new Error("لم يظهر ملف النتيجة بعد. حاول مرة أخرى.");
+            throw new Error("لم يتم العثور على ملف النتيجة.");
         } catch (e) {
-            createMessage("❌ خطأ في جلب النتيجة: " + e.message, 'bot');
+            createMessage("❌ خطأ في النتيجة: " + e.message, 'bot');
             resetUI();
         }
     }
