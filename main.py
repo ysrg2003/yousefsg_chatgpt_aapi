@@ -12,7 +12,7 @@ except ImportError:
     sys.exit(1)
 
 # الرابط الأساسي لجيمناي
-GEMINI_URL = "https://gemini.google.com/app"
+GEMINI_URL = "https://chatgpt.com"
 
 async def run_gemini_automation(prompt):
     print(f"🧐 جاري معالجة الطلب: {prompt}")
