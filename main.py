@@ -3,138 +3,112 @@ import sys
 import json
 import asyncio
 
-# 1. التحقق من وجود مكتبة Camoufox
+# 1. التحقق من البيئة والمحرك
 try:
     from camoufox.async_api import AsyncCamoufox
-    print("🚀 المحرك جاهز: تم تفعيل بيئة التخفي بنجاح.")
+    print("🚀 المحرك جاهز: تم تفعيل بيئة ChatGPT بنجاح.")
 except ImportError:
-    print("❌ خطأ: لم يتم العثور على مكتبة Camoufox. يرجى تثبيتها عبر: pip install camoufox")
+    print("❌ خطأ: لم يتم العثور على مكتبة Camoufox.")
     sys.exit(1)
 
-# الإعدادات الخاصة بـ ChatGPT
-CHATGPT_URL = "https://chatgpt.com"
+# الرابط الأساسي لـ ChatGPT
+CHATGPT_URL = "https://chatgpt.com/"
 
 async def run_chatgpt_automation(prompt):
-    print(f"🧐 جاري معالجة طلبك: {prompt}")
+    print(f"🧐 جاري معالجة السؤال: {prompt}")
     
-    # القيمة الافتراضية للمخرجات
-    output = {"status": "error", "message": "فشل غير معروف"}
+    output = {"status": "error", "message": "فشل التشغيل المبدئي"}
 
     try:
-        # 2. تشغيل المتصفح مع تفعيل خصائص محاكاة البشر
+        # 2. إعداد المتصفح بتقنيات التخفي
         async with AsyncCamoufox(
-            headless=True,             
-            block_images=True,         
-            i_know_what_im_doing=True, 
-            humanize=True,             
+            headless=True,
+            block_images=True,
+            i_know_what_im_doing=True,
+            humanize=True,
         ) as browser:
             
-            # 3. إعداد السياق (Context)
             context = await browser.new_context(
                 viewport={'width': 1280, 'height': 800},
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
             )
 
-            # 4. التعامل مع الكوكيز (Session)
+            # 3. إدارة الجلسة عبر الكوكيز (مهم جداً لـ ChatGPT)
             cookies_json = os.getenv("CHATGPT_COOKIES")
             if cookies_json:
                 try:
                     await context.add_cookies(json.loads(cookies_json))
-                    print("🔑 تم استيراد الجلسة من الكوكيز.")
+                    print("🔑 تم حقن كوكيز الجلسة.")
                 except Exception as e:
-                    print(f"⚠️ تحذير: فشل استيراد الكوكيز: {e}")
+                    print(f"⚠️ خطأ في الكوكيز: {e}")
 
             page = await context.new_page()
             
-            # 5. التوجه للموقع
-            print("🌐 الدخول إلى ChatGPT...")
-            await page.goto(CHATGPT_URL, wait_until="networkidle", timeout=60000)
+            # 4. الدخول إلى الموقع
+            print("🌐 الإبحار إلى ChatGPT...")
+            await page.goto(CHATGPT_URL, wait_until="domcontentloaded", timeout=60000)
 
-            # 6. تحديد صندوق الكتابة
+            # 5. البحث عن صندوق الإدخال (Selector الخاص بـ ChatGPT)
+            # ChatGPT يستخدم غالباً textarea بمعرف #prompt-textarea
             input_selector = "#prompt-textarea"
             try:
                 await page.wait_for_selector(input_selector, timeout=30000)
             except:
-                print("❌ لم نجد صندوق الكتابة. قد يكون الموقع يطلب تسجيل دخول أو اختبار Bot.")
+                print("❌ تعذر العثور على مربع النص. قد تحتاج لتحديث الكوكيز أو تجاوز التحقق (Cloudflare).")
                 return
 
-            # 7. إرسال السؤال
+            # 6. كتابة السؤال وإرساله
             print("✍️ كتابة السؤال...")
             await page.fill(input_selector, prompt)
-            await asyncio.sleep(1) 
             await page.keyboard.press("Enter")
             
-            # 8. مراقبة الرد
-            response_selector = ".markdown.prose"
-            stop_button_selector = 'button[data-testid="stop-button"], button[aria-label="Stop generating"]'
+            # 7. مراقبة الرد (Streaming)
+            print("📡 بانتظار رد ChatGPT...")
+            # ChatGPT يضع الردود داخل divs بتنسيق markdown (فئة .prose)
+            response_selector = ".prose"
             
-            print("📡 بانتظار استجابة الذكاء الاصطناعي...")
             await page.wait_for_selector(response_selector, timeout=60000)
             
-            # الانتظار حتى اكتمال الكتابة
-            max_wait = 90  
-            for i in range(max_wait):
-                is_writing = await page.query_selector(stop_button_selector)
-                if not is_writing and i > 2: 
+            previous_html = ""
+            stable_count = 0
+            
+            # فحص استقرار الرد
+            for attempt in range(120): # ChatGPT قد يكون أبطأ قليلاً في الردود الطويلة
+                current_html = await page.evaluate(f'''() => {{
+                    const els = document.querySelectorAll("{response_selector}");
+                    return els.length > 0 ? els[els.length - 1].innerHTML : "";
+                }}''')
+                
+                if len(current_html) > len(previous_html):
+                    previous_html = current_html
+                    stable_count = 0
+                elif len(current_html) > 0:
+                    stable_count += 1
+                
+                # إذا لم يتغير النص لمدة 5 ثوانٍ، نعتبره انتهى
+                if stable_count >= 5:
+                    print(f"✅ تم اكتمال الرد.")
                     break
+                
                 await asyncio.sleep(1)
 
-            # 9. استخراج الرد الأخير مع "التنظيف العميق المحسن"
+            # 8. استخراج النتيجة النهائية
             final_res_html = await page.evaluate(f'''() => {{
                 const els = document.querySelectorAll("{response_selector}");
-                if (els.length === 0) return "خطأ: تعذر العثور على محتوى الرد.";
-                
-                // نأخذ نسخة من الرسالة الأخيرة للعمل عليها
-                const lastMsg = els[els.length - 1].cloneNode(true);
-
-                // أ. حذف جميع الأزرار (أزرار النسخ، الاستماع، إلخ)
-                const buttons = lastMsg.querySelectorAll('button');
-                buttons.forEach(btn => btn.remove());
-
-                // ب. حذف الأيقونات (SVG)
-                const svgs = lastMsg.querySelectorAll('svg');
-                svgs.forEach(svg => svg.remove());
-
-                // ج. معالجة صناديق الكود: حذف اسم اللغة (التحسين المطلوب)
-                const preBlocks = lastMsg.querySelectorAll('pre');
-                preBlocks.forEach(pre => {{
-                    const code = pre.querySelector('code');
-                    if (code) {{
-                        // تنظيف الفراغات في البداية لضمان دقة الفحص
-                        let content = code.innerText.trimStart();
-                        let lines = content.split('\\n');
-                        
-                        if (lines.length > 0) {{
-                            let firstLine = lines[0].trim();
-                            
-                            // معيار التحقق: كلمة واحدة بدون مسافات ولا تحتوي على رموز برمجية
-                            const isSingleWord = !firstLine.includes(' ') && firstLine.length > 0;
-                            const noCodeSymbols = !/[=(){}\\[\\];<>!#\\/]/.test(firstLine);
-
-                            if (isSingleWord && noCodeSymbols) {{
-                                lines.shift(); // حذف السطر الذي يحتوي على اسم اللغة فقط
-                            }}
-                            
-                            // إعادة تعيين النص المنظف مع إزالة الفراغات الزائدة في البداية
-                            code.innerText = lines.join('\\n').trimStart();
-                        }}
-                    }}
-                }});
-
-                return lastMsg.innerHTML; 
+                return els.length > 0 ? els[els.length - 1].innerHTML : "خطأ في استخراج المحتوى";
             }}''')
 
             output = {"status": "success", "response": final_res_html}
 
     except Exception as e:
-        print(f"❌ حدث خطأ تقني: {e}")
+        print(f"❌ حدث خطأ: {e}")
         output = {"status": "error", "message": str(e)}
 
-    # 10. حفظ النتيجة
-    with open("result.json", "w", encoding="utf-8") as f:
+    # 9. حفظ النتيجة
+    with open("chatgpt_result.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=4)
-    print("✅ تمت العملية بنجاح. النتيجة في result.json")
+    print("💾 تم حفظ الرد في chatgpt_result.json")
 
 if __name__ == "__main__":
-    user_prompt = sys.argv[1] if len(sys.argv) > 1 else "مرحباً، كيف حالك؟"
+    user_prompt = sys.argv[1] if len(sys.argv) > 1 else "أهلاً، كيف حالك اليوم؟"
     asyncio.run(run_chatgpt_automation(user_prompt))
