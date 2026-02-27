@@ -70,56 +70,54 @@ async def run_chatgpt_automation(prompt):
                     break
                 await asyncio.sleep(1)
 
-            # 9. استخراج الرد مع التنظيف الذكي (Smart Cleaning)
-            final_res_html = await page.evaluate(f'''() => {{
-                const els = document.querySelectorAll("{response_selector}");
+            # 9. استخراج الرد مع تمرير المتغير بشكل آمن لتجنب SyntaxError
+            # نلاحظ هنا أننا أزلنا حرف f واستخدمنا معامل إضافي في evaluate
+            final_res_html = await page.evaluate('''(selector) => {
+                const els = document.querySelectorAll(selector);
                 if (els.length === 0) return "خطأ في جلب المحتوى.";
                 
                 const lastMsg = els[els.length - 1].cloneNode(true);
 
-                // أ. حذف الأزرار والأيقونات فوراً
-                lastMsg.querySelectorAll('button, svg, .sr-only').forEach(el => el.remove());
+                // أ. حذف الأزرار والأيقونات
+                const extras = lastMsg.querySelectorAll('button, svg, .sr-only');
+                extras.forEach(el => el.remove());
 
-                // ب. تنظيف صناديق الكود بدقة
+                // ب. تنظيف صناديق الكود
                 const preBlocks = lastMsg.querySelectorAll('pre');
-                preBlocks.forEach(pre => {{
-                    // 1. حذف أي شريط علوي (Header) يحتوي على "Copy code" أو اسم اللغة
-                    // نبحث عن أي Div في بداية الـ pre يحتوي على نصوص تحكم
+                preBlocks.forEach(pre => {
+                    // 1. حذف رؤوس الصناديق التي تحتوي على نصوص تحكم
                     const possibleHeaders = pre.querySelectorAll('div');
-                    possibleHeaders.forEach(div => {{
-                        if (div.innerText.toLowerCase().includes('copy') || 
-                            div.innerText.toLowerCase().includes('python') ||
-                            div.classList.contains('flex')) {{
+                    possibleHeaders.forEach(div => {
+                        const txt = div.innerText.toLowerCase();
+                        if (txt.includes('copy') || txt.includes('python') || div.classList.contains('flex')) {
                             div.remove();
-                        }}
-                    }});
+                        }
+                    });
 
-                    // 2. معالجة نص الكود داخل وسم code
+                    // 2. معالجة نص الكود
                     const codeTag = pre.querySelector('code');
-                    if (codeTag) {{
+                    if (codeTag) {
                         let rawText = codeTag.innerText;
                         let lines = rawText.split('\\n');
 
-                        // التحقق: إذا كان السطر الأول هو مجرد اسم لغة برمجة (بدون أكواد)، نحذفه
-                        const commonLangs = ['python', 'javascript', 'html', 'css', 'sql', 'bash', 'json'];
-                        if (lines.length > 0) {{
+                        const commonLangs = ['python', 'javascript', 'html', 'css', 'sql', 'bash', 'json', 'cpp', 'c#'];
+                        if (lines.length > 0) {
                             const firstLine = lines[0].trim().toLowerCase();
-                            if (commonLangs.includes(firstLine) || firstLine === "code") {{
+                            if (commonLangs.includes(firstLine) || firstLine === "code") {
                                 lines.shift();
-                            }}
+                            }
                         }
-
-                        // إعادة بناء الكود وتنظيف الفراغات في البداية والنهاية
                         codeTag.innerText = lines.join('\\n').trim();
-                    }}
-                }});
+                    }
+                });
 
                 return lastMsg.innerHTML; 
-            }}''')
+            }''', response_selector) # مررنا المتغير هنا
 
             output = {"status": "success", "response": final_res_html}
 
     except Exception as e:
+        print(f"❌ حدث خطأ: {e}")
         output = {"status": "error", "message": str(e)}
 
     with open("result.json", "w", encoding="utf-8") as f:
