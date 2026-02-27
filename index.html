@@ -362,7 +362,7 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const art = data.artifacts.find(a => a.name === 'chatjpt-json');
+            const art = data.artifacts.find(a => a.name === 'result-json');
             if (!art) throw new Error("لم يتم العثور على النتائج.");
 
             const zipRes = await fetch(art.archive_download_url, { headers: { 'Authorization': `Bearer ${token}` } });
